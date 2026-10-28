@@ -1,0 +1,268 @@
+# STM32 Reaction Game
+
+A reaction-time game developed in C for the **STM32 NUCLEO-F401RE** development board using STM32CubeIDE and STM32CubeMX.
+
+The goal of this project is to develop and consolidate embedded systems programming skills through a practical application involving GPIO, hardware timers, interrupts, UART communication, and modular software architecture.
+
+The project will feature two implementations of the same game, allowing a comparison between conventional control flow and a Finite State Machine (FSM).
+
+## Table of Contents
+
+- [STM32 Reaction Game](#stm32-reaction-game)
+  - [Table of Contents](#table-of-contents)
+  - [Project Overview](#project-overview)
+    - [Learning Objectives](#learning-objectives)
+  - [Hardware](#hardware)
+  - [Game Workflow](#game-workflow)
+  - [Functional Requirements](#functional-requirements)
+  - [Peripheral Configuration](#peripheral-configuration)
+    - [System Clock](#system-clock)
+    - [TIM2 — Reaction-Time Measurement](#tim2--reaction-time-measurement)
+    - [TIM3 — Random Waiting Interval](#tim3--random-waiting-interval)
+    - [GPIO — LED and User Button](#gpio--led-and-user-button)
+    - [USART2 — UART Communication](#usart2--uart-communication)
+  - [Software Architecture](#software-architecture)
+    - [Common Modules](#common-modules)
+    - [Direct Implementation](#direct-implementation)
+    - [Finite State Machine Implementation](#finite-state-machine-implementation)
+  - [Git Branch Strategy](#git-branch-strategy)
+  - [Development Status](#development-status)
+    - [Completed](#completed)
+    - [Pending](#pending)
+  - [Development Environment](#development-environment)
+
+## Project Overview
+
+The STM32 Reaction Game measures how quickly a user reacts to a visual signal.
+
+The game uses the development board's built-in LED and user button. Reaction times are transmitted to a computer through UART and displayed in a serial terminal.
+
+No additional electronic components are required beyond the development board and a USB connection to the computer.
+
+### Learning Objectives
+
+- Configure and control GPIO peripherals.
+- Use hardware timers for time measurement and periodic events.
+- Implement interrupt-driven programming.
+- Communicate with a computer through UART.
+- Develop modular firmware using C source (`.c`) and header (`.h`) files.
+- Use Git branches to maintain independent implementations.
+- Design and implement a Finite State Machine for an embedded application.
+
+## Hardware
+
+| Component | Description |
+|---|---|
+| Development board | STM32 NUCLEO-F401RE |
+| Microcontroller | STM32F401RE |
+| Visual indicator | On-board LED (LD2) |
+| User input | On-board user button (B1) |
+| Computer interface | USB connection through the ST-LINK virtual COM port |
+
+No external hardware components are required.
+
+## Game Workflow
+
+The intended game sequence is:
+
+1. The firmware starts the game automatically after initialization.
+2. The system waits for a random time interval.
+3. The on-board LED turns on to signal the user.
+4. The user presses the on-board button as quickly as possible.
+5. The microcontroller measures the reaction time.
+6. The result is transmitted to the computer through UART.
+7. A new round starts automatically.
+
+The random waiting interval prevents the user from anticipating when the LED will turn on.
+
+## Functional Requirements
+
+The firmware will implement the following features:
+
+- **Automatic startup:** The game starts without requiring an initial command.
+- **Random delay:** A random waiting interval precedes the visual signal.
+- **LED indication:** The built-in LED indicates when the user should react.
+- **Button detection:** The built-in button registers the user's response.
+- **Reaction-time measurement:** Hardware timer counting measures the elapsed time between the LED turning on and the button press.
+- **UART output:** Reaction-time results are transmitted to a computer and displayed in a serial terminal.
+- **Automatic replay:** A new round starts after the previous result has been reported.
+
+## Peripheral Configuration
+
+The initial peripheral configuration is generated using STM32CubeMX and integrated into the STM32CubeIDE project.
+
+### System Clock
+
+The system clock is configured using the internal High-Speed Internal (HSI) oscillator and the Phase-Locked Loop (PLL).
+
+| Parameter | Value |
+|---|---|
+| HSI frequency | 16 MHz |
+| PLL configuration | M = 16, N = 336, P = 4 |
+| SYSCLK frequency | 84 MHz |
+| AHB prescaler | DIV1 |
+| APB1 prescaler | DIV2 |
+| APB1 peripheral clock | 42 MHz |
+| APB1 timer clock | 84 MHz |
+
+The APB1 timers receive an 84 MHz clock because the APB1 prescaler is greater than one.
+
+### TIM2 — Reaction-Time Measurement
+
+TIM2 is configured as a hardware time base for measuring the user's reaction time.
+
+| Parameter | Value |
+|---|---|
+| Timer clock | 84 MHz |
+| Prescaler (PSC) | 41999 |
+| Auto-reload value (ARR) | 999 |
+| Counter mode | Up-counting |
+| Counter increment | 0.5 ms |
+| Update period | 500 ms |
+| NVIC interrupt | Enabled |
+
+The timer counter increments every 0.5 ms and generates an update event every 500 ms.
+
+The application will use this timer to measure reaction time. The measurement logic and counter-overflow handling will be implemented in the application firmware.
+
+### TIM3 — Random Waiting Interval
+
+TIM3 is configured as a hardware time base for managing the waiting interval before the LED turns on.
+
+| Parameter | Value |
+|---|---|
+| Timer clock | 84 MHz |
+| Prescaler (PSC) | 8399 |
+| Auto-reload value (ARR) | 999 |
+| Counter mode | Up-counting |
+| Counter increment | 1 ms |
+| Update period | 1 second |
+| NVIC interrupt | Enabled |
+
+The timer counter increments every 1 ms and generates an update event every second.
+
+The application will use this timer to manage the waiting interval before the visual signal. Random-delay generation and the associated game logic remain to be implemented.
+
+### GPIO — LED and User Button
+
+The built-in LED (LD2) is configured as a GPIO output.
+
+The built-in user button (B1) is configured as an external interrupt input using a falling-edge trigger.
+
+The corresponding external interrupt is enabled in the Nested Vectored Interrupt Controller (NVIC).
+
+### USART2 — UART Communication
+
+USART2 is configured to transmit game results to the computer through the board's USB virtual COM port.
+
+| Parameter | Value |
+|---|---|
+| Baud rate | 115200 |
+| Word length | 8 bits |
+| Stop bits | 1 |
+| Parity | None |
+| Direction | Transmit only |
+| Hardware flow control | Disabled |
+| UART interrupts | Not required for the planned blocking transmission approach |
+
+The intended output is a readable reaction-time result displayed in a serial terminal on the computer.
+
+UART transmission and result formatting will be implemented during application development.
+
+## Software Architecture
+
+The firmware will be organized into independent modules to separate hardware control, timing, communication, and game logic.
+
+### Common Modules
+
+The following modules are planned for both implementations:
+
+| File | Responsibility |
+|---|---|
+| `main.c` | System initialization and main application loop |
+| `led.c` / `led.h` | Control of the built-in LED |
+| `button.c` / `button.h` | Button input and press-event management |
+| `reaction_timer.c` / `reaction_timer.h` | Reaction-time measurement |
+| `random_delay.c` / `random_delay.h` | Random waiting-interval management |
+| `uart_interface.c` / `uart_interface.h` | UART communication and result transmission |
+| `callbacks.c` / `callbacks.h` | Peripheral interrupt callback handling |
+
+The exact responsibilities and interfaces of these modules will be refined during implementation.
+
+### Direct Implementation
+
+The `direct-implementation` branch will implement the game logic using conventional control-flow structures.
+
+The game sequence will be managed directly by the application code without a dedicated FSM module.
+
+This implementation will provide a straightforward approach for comparison with the state-machine version.
+
+### Finite State Machine Implementation
+
+The `state-machine` branch will implement the game logic using a Finite State Machine (FSM).
+
+The game will be divided into explicit states representing its different stages. Transitions between states will be determined by timer events and button presses.
+
+This implementation will introduce two additional files:
+
+- `game_fsm.c`
+- `game_fsm.h`
+
+These files will exist exclusively in the `state-machine` branch.
+
+The FSM approach will make the game flow explicit and provide an opportunity to study state-based software design in embedded systems.
+
+## Git Branch Strategy
+
+The project will be maintained in a single Git repository with three main branches.
+
+| Branch | Purpose |
+|---|---|
+| `main` | Initial hardware configuration and generated firmware project |
+| `direct-implementation` | Game logic implemented using conventional control flow |
+| `state-machine` | Game logic implemented using a Finite State Machine |
+
+Both implementation branches will originate from `main`, ensuring that they share the same initial hardware configuration.
+
+The common hardware and communication modules will be maintained consistently across both implementations. The primary difference between the two branches will be the organization of the game logic.
+
+This structure will allow both approaches to be developed and compared independently.
+
+## Development Status
+
+**Current stage: Initial hardware configuration completed.**
+
+### Completed
+
+- STM32CubeMX peripheral configuration.
+- System clock configuration.
+- GPIO configuration for the built-in LED and user button.
+- TIM2 configuration for reaction-time measurement.
+- TIM3 configuration for waiting-interval timing.
+- NVIC configuration for timer and button interrupts.
+- USART2 configuration for serial transmission.
+- Initial firmware code generation.
+- Successful compilation of the generated project.
+
+### Pending
+
+- Implementation of the common software modules.
+- Random waiting-interval generation.
+- Reaction-time measurement logic.
+- Interrupt callback handling.
+- UART result transmission.
+- Direct game implementation.
+- FSM game implementation.
+- Hardware testing and validation.
+
+The current firmware contains the generated peripheral initialization code. The reaction game itself has not yet been implemented.
+
+
+## Development Environment
+
+- **IDE:** STM32CubeIDE
+- **Configuration tool:** STM32CubeMX
+- **Programming language:** C
+- **Version control:** Git
+- **Repository hosting:** GitHub
+- **Target board:** STM32 NUCLEO-F401RE
