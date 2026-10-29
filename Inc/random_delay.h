@@ -10,7 +10,7 @@
 
 #include "main.h"
 
-int Generate_Number(void);
+uint8_t Generate_Number(void);
 
 
 #endif /* RANDOM_DELAY_H_ */

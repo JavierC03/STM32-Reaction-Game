@@ -7,7 +7,9 @@
 #include "random_delay.h"
 #include <stdlib.h>
 
-int Generate_Number(void){
-	int numero = (rand() % 5) + 1;
+// Genera un número aleatorio entre 1 y 5 segundos
+uint8_t Generate_Number(void){
+	// Obtener un número entre 1 y 5
+	uint8_t numero = (rand() % 5) + 1;
 	return numero;
 }

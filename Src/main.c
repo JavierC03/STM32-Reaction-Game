@@ -22,6 +22,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "led.h"
+#include "uart_interface.h"
+#include "random_delay.h"
+#include "reaction_timer.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,6 +51,10 @@ TIM_HandleTypeDef htim3;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+volatile uint8_t flag_boton = 0;
+volatile uint8_t cont_tim2 = 0;
+volatile uint8_t cont_tim3 = 0;
 
 /* USER CODE END PV */
 
@@ -102,8 +111,45 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  // Apagar el LED antes de comenzar la ronda
+  Apagar();
+  // Generar el tiempo de espera aleatorio antes de encender el LED
+  uint8_t aleatorio =   Generate_Number();
+  // Iniciar TIM3 para contabilizar el tiempo de espera
+  HAL_TIM_Base_Start_IT(&htim3);
   while (1)
   {
+	  // Comprobar si ha transcurrido el tiempo de espera aleatorio
+	  if(aleatorio == cont_tim3){
+		  // Detener TIM3 y reiniciar su contador hardware y su variable software
+		  HAL_TIM_Base_Stop_IT(&htim3);
+		  __HAL_TIM_SET_COUNTER(&htim3,0);
+		  cont_tim3 = 0;
+		  // Encender el LED e iniciar la medición del tiempo de reacción
+		  Encender();
+		  Arrancar();
+	  }
+	  // Comprobar si se ha detectado una pulsación del botón
+	  if(flag_boton == 1){
+		  // Aceptar la pulsación únicamente si el LED está encendido
+		  if(Estado() == LED_ON){
+			  // Consumir el evento de pulsación
+			  flag_boton = 0;
+			  // Apagar el LED y obtener el tiempo de reacción medido por TIM2
+			  Apagar();
+			  // Enviar el tiempo de reacción por UART
+			  float tiempo = Obtener_Cuenta();
+			  Mensaje(tiempo);
+			  // Generar un nuevo tiempo de espera aleatorio para la siguiente ronda
+			  aleatorio = Generate_Number();
+			  // Iniciar TIM3 para comenzar la siguiente espera
+			  HAL_TIM_Base_Start_IT(&htim3);
+		  }else{
+			  // Ignorar las pulsaciones realizadas mientras el LED está apagado
+			  flag_boton = 0;
+		  }
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -223,7 +269,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 8399;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 999;
+  htim3.Init.Period = 9999;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)

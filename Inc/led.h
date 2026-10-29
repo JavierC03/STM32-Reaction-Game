@@ -9,9 +9,10 @@
 
 #include "main.h"
 
+// Estados posibles del LED
 typedef enum{
-	LED_OFF,
-	LED_ON
+	LED_OFF, // LED apagado
+	LED_ON // LED encendido
 }LED_Status;
 
 void Encender(void); // Turn on LED
