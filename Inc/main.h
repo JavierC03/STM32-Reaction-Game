@@ -54,6 +54,13 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+extern UART_HandleTypeDef huart2;
+extern volatile uint8_t flag_boton;
+extern volatile uint8_t cont_tim2;
+extern volatile uint8_t cont_tim3;
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

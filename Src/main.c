@@ -22,6 +22,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "led.h"
+#include "game_fsm.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,6 +49,10 @@ TIM_HandleTypeDef htim3;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+volatile uint8_t flag_boton = 0;
+volatile uint8_t cont_tim2 = 0;
+volatile uint8_t cont_tim3 = 0;
 
 /* USER CODE END PV */
 
@@ -98,12 +105,20 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+  // Apagar el LED al iniciar el juego
+  Apagar();
+  // Inicializar la máquina de estados
+  GameFSM_Init();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  // Ejecutar continuamente la máquina de estados
+	  GameFSM_Run();
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
