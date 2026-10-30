@@ -4,7 +4,7 @@ A reaction-time game developed in C for the **STM32 NUCLEO-F401RE** development 
 
 The goal of this project is to develop and consolidate embedded systems programming skills through a practical application involving GPIO, hardware timers, interrupts, UART communication, and modular software architecture.
 
-The project will feature two implementations of the same game, allowing a comparison between conventional control flow and a Finite State Machine (FSM).
+The project features two implementations of the same game, allowing a comparison between conventional control flow and a Finite State Machine (FSM).
 
 ## Table of Contents
 
@@ -28,7 +28,6 @@ The project will feature two implementations of the same game, allowing a compar
   - [Git Branch Strategy](#git-branch-strategy)
   - [Development Status](#development-status)
     - [Completed](#completed)
-    - [Pending](#pending)
   - [Development Environment](#development-environment)
   - [Serial Terminal](#serial-terminal)
 
@@ -64,7 +63,7 @@ No external hardware components are required.
 
 ## Game Workflow
 
-The intended game sequence is:
+The game follows this sequence:
 
 1. The firmware starts the game automatically after initialization.
 2. The system waits for a random time interval.
@@ -161,7 +160,7 @@ The built-in user button (B1) is configured as an external interrupt input using
 
 The corresponding external interrupt is enabled in the Nested Vectored Interrupt Controller (NVIC).
 
-The led.c module provides functions to:
+The `led.c` module provides functions to:
 
 - Turn on the LED using `Encender()`.
 - Turn off the LED using `Apagar()`.
@@ -185,7 +184,7 @@ USART2 is configured to transmit game results to the computer through the board'
 | Hardware flow control | Disabled |
 | UART interrupts | Not required for the planned blocking transmission approach |
 
-The uart_interface.c module provides the `Mensaje()` function to format and print the measured reaction time.
+The `uart_interface.c` module provides the `Mensaje()` function to format and print the measured reaction time.
 
 The application uses the `_write()` function to redirect standard output to USART2. This allows `printf()` messages to be transmitted to the serial terminal.
 
@@ -193,11 +192,11 @@ The output includes the measured reaction time in seconds.
 
 ## Software Architecture
 
-The firmware will be organized into independent modules to separate hardware control, timing, communication, and game logic.
+The firmware is organized into independent modules to separate hardware control, timing, communication, and game logic.
 
 ### Common Modules
 
-The following modules are implemented or planned for both implementations:
+The following modules are shared by both implementations:
 
 | File | Responsibility |
 |---|---|
@@ -206,36 +205,34 @@ The following modules are implemented or planned for both implementations:
 | `reaction_timer.c` / `reaction_timer.h` | Reaction-time measurement |
 | `random_delay.c` / `random_delay.h` | Random waiting-interval management |
 | `uart_interface.c` / `uart_interface.h` | UART communication and result transmission |
-| `callbacks.c` | Peripheral interrupt callback handling |
-
-The exact responsibilities and interfaces of these modules will be refined during implementation.
+| `callbacks.c` | Handling of timer and GPIO interrupt callbacks |
 
 ### Direct Implementation
 
-The `direct-implementation` branch will implement the game logic using conventional control-flow structures.
+The `direct-implementation` branch implements the game logic using conventional control-flow structures.
 
-The game sequence will be managed directly by the application code without a dedicated FSM module.
+The game sequence is managed directly by the application code without a dedicated FSM module.
 
-This implementation will provide a straightforward approach for comparison with the state-machine version.
+This implementation provides a straightforward approach for comparison with the state-machine version.
 
 ### Finite State Machine Implementation
 
-The `state-machine` branch will implement the game logic using a Finite State Machine (FSM).
+The `state-machine` branch implements the game logic using a Finite State Machine (FSM).
 
-The game will be divided into explicit states representing its different stages. Transitions between states will be determined by timer events and button presses.
+The game is divided into explicit states representing its different stages. Transitions between states are determined by timer events and button presses.
 
-This implementation will introduce two additional files:
+This implementation introduces two additional files:
 
 - `game_fsm.c`
 - `game_fsm.h`
 
-These files will exist exclusively in the `state-machine` branch.
+These files exist exclusively in the `state-machine` branch.
 
-The FSM approach will make the game flow explicit and provide an opportunity to study state-based software design in embedded systems.
+The FSM approach makes the game flow explicit and provides an opportunity to study state-based software design in embedded systems.
 
 ## Git Branch Strategy
 
-The project will be maintained in a single Git repository with three main branches.
+The project is maintained in a single Git repository with three main branches.
 
 | Branch | Purpose |
 |---|---|
@@ -243,15 +240,15 @@ The project will be maintained in a single Git repository with three main branch
 | `direct-implementation` | Game logic implemented using conventional control flow |
 | `state-machine` | Game logic implemented using a Finite State Machine |
 
-Both implementation branches will originate from `main`, ensuring that they share the same initial hardware configuration.
+Both implementation branches originate from `main`, ensuring that they share the same initial hardware configuration.
 
-The common hardware and communication modules will be maintained consistently across both implementations. The primary difference between the two branches will be the organization of the game logic.
+The common hardware and communication modules are maintained consistently across both implementations. The primary difference between the two branches is the organization of the game logic.
 
-This structure will allow both approaches to be developed and compared independently.
+This structure allows both approaches to be developed and compared independently.
 
 ## Development Status
 
-**Current stage: Direct implementation developed and undergoing hardware testing.**
+**Current stage: Both game implementations developed.**
 
 ### Completed
 
@@ -270,13 +267,8 @@ This structure will allow both approaches to be developed and compared independe
 - Interrupt callback handling.
 - UART result transmission.
 - Direct game implementation.
-
-### Pending
-
 - FSM game implementation.
-- Hardware testing and validation.
-
-The current direct implementation is functional, with further testing and refinement still required.
+- Hardware testing.
 
 ## Development Environment
 
@@ -293,13 +285,14 @@ The game sends reaction-time results to the computer through the board's USB vir
 
 On Linux, picocom can be used to open the serial terminal.
 
-First, connect the development board through USB and identify the serial device. In the current setup, the device is /dev/ttyACM0.
+First, connect the development board through USB and identify the serial device. In the current setup, the serial device is `/dev/ttyACM0`.
 
 Run the following command:
 
 ```bash
 picocom -b 115200 /dev/ttyACM0
 ```
+
 The baud rate must match the USART2 configuration.
 
 Once the terminal is open, the reaction-time results will appear when a round is completed.
